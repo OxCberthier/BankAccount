@@ -64,4 +64,15 @@ class AccountServiceImplTest {
 
         assertThrows(AccountNotFoundException.class, () -> accountService.addOperation(operationCommand));
     }
+
+    @Test
+    public void addDepositOperationOnAccountToUpdateBalanceNegativeAmount() {
+        Long accountId = 1L;
+        double operationAmount = -9.99;
+        Account account = new Account("MyAccount", clientMock, INIT_BALANCE_ACCOUNT);
+        when(accountCrudRepositoryMock.findById(accountId)).thenReturn(Optional.of(account));
+
+        OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.DEPOSIT);
+        assertThrows(InvalidOperationException.class, () -> accountService.addOperation(operationCommand));
+    }
 }
