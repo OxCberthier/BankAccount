@@ -22,9 +22,13 @@ public class AccountController {
     AccountService accountService;
 
     @PostMapping("/operations")
-    public ResponseEntity<ApiResult> addOperation(@Validated @RequestBody OperationPayload operationPayload) throws InvalidOperationException, AccountNotFoundException {
+    public ResponseEntity<ApiResult> addOperation(@Validated @RequestBody OperationPayload operationPayload) throws InvalidOperationException {
 
-        accountService.addOperation(operationPayload.toCommand());
+        try {
+            accountService.addOperation(operationPayload.toCommand());
+        } catch (AccountNotFoundException e) {
+            return Result.notFound();
+        }
 
         return Result.ok();
     }
