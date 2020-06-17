@@ -1,10 +1,7 @@
 package com.cberthier.bankaccount.service.impl;
 
 import com.cberthier.bankaccount.domain.OperationCommand;
-import com.cberthier.bankaccount.domain.model.Account;
-import com.cberthier.bankaccount.domain.model.Client;
-import com.cberthier.bankaccount.domain.model.Operation;
-import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
+import com.cberthier.bankaccount.domain.model.*;
 import com.cberthier.bankaccount.domain.repository.AccountCrudRepository;
 import com.cberthier.bankaccount.domain.repository.OperationPagingAndSortingRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,5 +52,16 @@ class AccountServiceImplTest {
 
         //Verify balance account save in db is updated
         assertEquals(Double.sum(INIT_BALANCE_ACCOUNT, operationAmount), operationCaptorValue.getAccount().getBalance());
+    }
+
+    @Test
+    public void addDepositOperationOnAccountToUpdateBalanceAccountNotFound() {
+        Long accountId = 1L;
+        double operationAmount = 99.9;
+        when(accountCrudRepositoryMock.findById(accountId)).thenReturn(Optional.empty());
+
+        OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.DEPOSIT);
+
+        assertThrows(AccountNotFoundException.class, () -> accountService.addOperation(operationCommand));
     }
 }
