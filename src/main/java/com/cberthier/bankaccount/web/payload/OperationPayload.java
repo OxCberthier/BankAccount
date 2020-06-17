@@ -15,6 +15,12 @@ public class OperationPayload {
     @NotNull
     private OperationTypeEnum operationType;
 
+    public OperationPayload(Long accountId, double amount, OperationTypeEnum operationType) {
+        this.accountId = accountId;
+        this.amount = amount;
+        this.operationType = operationType;
+    }
+
     public OperationCommand toCommand() {
         return new OperationCommand(accountId, amount, operationType);
     }

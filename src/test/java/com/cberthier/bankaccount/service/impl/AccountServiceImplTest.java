@@ -19,14 +19,14 @@ import static org.mockito.Mockito.when;
 
 class AccountServiceImplTest {
 
-    private static final double INIT_BALANCE_ACCOUNT = 0;
-    private static AccountServiceImpl accountService;
+    private final double INIT_BALANCE_ACCOUNT = 0;
+    private AccountServiceImpl accountService;
     @Mock
-    private static AccountCrudRepository accountCrudRepositoryMock;
+    private AccountCrudRepository accountCrudRepositoryMock;
     @Mock
-    private static OperationPagingAndSortingRepository operationPagingAndSortingRepository;
+    private OperationPagingAndSortingRepository operationPagingAndSortingRepository;
     @Mock
-    private static Client clientMock;
+    private Client clientMock;
 
     @BeforeEach
     public void setup() {
