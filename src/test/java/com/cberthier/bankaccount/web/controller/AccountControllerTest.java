@@ -2,6 +2,7 @@ package com.cberthier.bankaccount.web.controller;
 
 import com.cberthier.bankaccount.domain.OperationCommand;
 import com.cberthier.bankaccount.domain.model.Account;
+import com.cberthier.bankaccount.domain.model.AccountNotFoundException;
 import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
 import com.cberthier.bankaccount.service.AccountService;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
@@ -58,5 +59,24 @@ class AccountControllerTest {
         assertEquals(operationPayload.getAccountId(), captorValue.getAccountId());
         assertEquals(operationPayload.getAmount(), captorValue.getAmount());
         assertEquals(operationPayload.getOperationType(), captorValue.getOperationType());
+    }
+
+    @Test
+    public void addDepositOperationToAccountNotFound() throws Exception {
+
+        OperationPayload operationPayload = new OperationPayload(1L, 100, OperationTypeEnum.DEPOSIT);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        when(accountService.addOperation(any(OperationCommand.class))).thenThrow(new AccountNotFoundException());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/accounts/operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(StandardCharsets.UTF_8.name())
+                        .content(objectMapper.writeValueAsString(operationPayload))
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+
+        verify(accountService).addOperation(any(OperationCommand.class));
     }
 }
