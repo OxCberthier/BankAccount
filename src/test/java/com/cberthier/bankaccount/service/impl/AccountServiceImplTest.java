@@ -35,7 +35,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void addDepositOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException {
+    public void addDepositOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException {
         Long accountId = 1L;
         double operationAmount = 99.9;
         Account account = new Account("MyAccount", clientMock, INIT_BALANCE_ACCOUNT);

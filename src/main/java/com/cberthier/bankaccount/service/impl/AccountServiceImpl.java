@@ -3,6 +3,7 @@ package com.cberthier.bankaccount.service.impl;
 import com.cberthier.bankaccount.domain.OperationCommand;
 import com.cberthier.bankaccount.domain.model.Account;
 import com.cberthier.bankaccount.domain.model.AccountNotFoundException;
+import com.cberthier.bankaccount.domain.model.InvalidOperationException;
 import com.cberthier.bankaccount.domain.model.Operation;
 import com.cberthier.bankaccount.domain.repository.AccountCrudRepository;
 import com.cberthier.bankaccount.domain.repository.OperationPagingAndSortingRepository;
@@ -30,9 +31,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account addOperation(OperationCommand operationCommand) throws AccountNotFoundException {
+    public Account addOperation(OperationCommand operationCommand) throws AccountNotFoundException, InvalidOperationException {
         logger.debug("Add Operation -> AccountId {}, Amount: {}, Type: {}",
                 operationCommand.getAccountId(), operationCommand.getAmount(), operationCommand.getOperationType());
+
+        if (Double.compare(operationCommand.getAmount(), 0) < 0) {
+            throw new InvalidOperationException();
+        }
+
         Optional<Account> optionalAccount = accountCrudRepository.findById(operationCommand.getAccountId());
 
         if (optionalAccount.isEmpty()) {
