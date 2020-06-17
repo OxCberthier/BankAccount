@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,16 +23,19 @@ public class AccountController {
     AccountService accountService;
 
     @PostMapping("/operations")
-    public ResponseEntity<ApiResult> addOperation(@Validated @RequestBody OperationPayload operationPayload) {
+    public ResponseEntity<ApiResult> addOperation(@Validated @RequestBody OperationPayload operationPayload) throws AccountNotFoundException {
 
         try {
             accountService.addOperation(operationPayload.toCommand());
-        } catch (AccountNotFoundException e) {
-            return Result.notFound();
         } catch (InvalidOperationException e) {
             return Result.failure("Invalid Operation");
         }
 
         return Result.ok();
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ApiResult> handleAccountNotFoundException() {
+        return Result.notFound();
     }
 }
