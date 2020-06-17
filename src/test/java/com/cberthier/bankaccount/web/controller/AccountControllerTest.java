@@ -3,6 +3,7 @@ package com.cberthier.bankaccount.web.controller;
 import com.cberthier.bankaccount.domain.OperationCommand;
 import com.cberthier.bankaccount.domain.model.Account;
 import com.cberthier.bankaccount.domain.model.AccountNotFoundException;
+import com.cberthier.bankaccount.domain.model.InvalidOperationException;
 import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
 import com.cberthier.bankaccount.service.AccountService;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
@@ -76,6 +77,25 @@ class AccountControllerTest {
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(objectMapper.writeValueAsString(operationPayload))
         ).andExpect(MockMvcResultMatchers.status().isNotFound());
+
+        verify(accountService).addOperation(any(OperationCommand.class));
+    }
+
+    @Test
+    public void addDepositOperationToAccountWithNegativeAmount() throws Exception {
+
+        OperationPayload operationPayload = new OperationPayload(1L, -10, OperationTypeEnum.DEPOSIT);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        when(accountService.addOperation(any(OperationCommand.class))).thenThrow(new InvalidOperationException());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/accounts/operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(StandardCharsets.UTF_8.name())
+                        .content(objectMapper.writeValueAsString(operationPayload))
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         verify(accountService).addOperation(any(OperationCommand.class));
     }
