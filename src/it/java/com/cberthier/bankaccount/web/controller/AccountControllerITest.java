@@ -1,5 +1,6 @@
 package com.cberthier.bankaccount.web.controller;
 
+import com.cberthier.bankaccount.BankAccountApplication;
 import com.cberthier.bankaccount.domain.model.Account;
 import com.cberthier.bankaccount.domain.model.Client;
 import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
@@ -20,7 +21,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.nio.charset.StandardCharsets;
 
-@SpringBootTest
+@SpringBootTest(classes = BankAccountApplication.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AccountControllerITest {
