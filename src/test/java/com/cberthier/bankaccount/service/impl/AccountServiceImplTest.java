@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 class AccountServiceImplTest {
 
-    private final double INIT_BALANCE_ACCOUNT = 0;
+    private final double INIT_BALANCE_ACCOUNT = 100;
     private AccountServiceImpl accountService;
     @Mock
     private AccountCrudRepository accountCrudRepositoryMock;
@@ -48,10 +48,10 @@ class AccountServiceImplTest {
         verify(operationPagingAndSortingRepository).save(operationCaptor.capture());
         Operation operationCaptorValue = operationCaptor.getValue();
         //Verify balance account returned is updated
-        assertEquals(Double.sum(INIT_BALANCE_ACCOUNT, operationAmount), accountReturned.getBalance());
+        assertEquals(199.9, accountReturned.getBalance());
 
         //Verify balance account save in db is updated
-        assertEquals(Double.sum(INIT_BALANCE_ACCOUNT, operationAmount), operationCaptorValue.getAccount().getBalance());
+        assertEquals(199.9, operationCaptorValue.getAccount().getBalance());
     }
 
     @Test
@@ -74,5 +74,26 @@ class AccountServiceImplTest {
 
         OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.DEPOSIT);
         assertThrows(InvalidOperationException.class, () -> accountService.addOperation(operationCommand));
+    }
+
+
+    @Test
+    public void addWithdrawalOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException {
+        Long accountId = 1L;
+        double operationAmount = 99.9;
+        Account account = new Account("MyAccount", clientMock, INIT_BALANCE_ACCOUNT);
+        ArgumentCaptor<Operation> operationCaptor = ArgumentCaptor.forClass(Operation.class);
+        when(accountCrudRepositoryMock.findById(accountId)).thenReturn(Optional.of(account));
+
+        OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.WITHDRAWAL);
+        Account accountReturned = accountService.addOperation(operationCommand);
+
+        verify(operationPagingAndSortingRepository).save(operationCaptor.capture());
+        Operation operationCaptorValue = operationCaptor.getValue();
+        //Verify balance account returned is updated
+        assertEquals(0.1, accountReturned.getBalance());
+
+        //Verify balance account save in db is updated
+        assertEquals(0.1, operationCaptorValue.getAccount().getBalance());
     }
 }
