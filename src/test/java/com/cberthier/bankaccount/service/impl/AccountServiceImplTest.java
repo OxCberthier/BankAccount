@@ -14,8 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class AccountServiceImplTest {
 
@@ -63,6 +62,8 @@ class AccountServiceImplTest {
         OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.DEPOSIT);
 
         assertThrows(AccountNotFoundException.class, () -> accountService.addOperation(operationCommand));
+
+        verify(operationPagingAndSortingRepository, never()).save(any(Operation.class));
     }
 
     @Test
@@ -74,8 +75,9 @@ class AccountServiceImplTest {
 
         OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.DEPOSIT);
         assertThrows(InvalidOperationException.class, () -> accountService.addOperation(operationCommand));
-    }
 
+        verify(operationPagingAndSortingRepository, never()).save(any(Operation.class));
+    }
 
     @Test
     public void addWithdrawalOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException {
@@ -95,5 +97,19 @@ class AccountServiceImplTest {
 
         //Verify balance account save in db is updated
         assertEquals(0.1, operationCaptorValue.getAccount().getBalance());
+    }
+
+    @Test
+    public void addWithdrawalOperationOnAccountToUpdateBalanceAccountInsufficientFunds() {
+        Long accountId = 1L;
+        double operationAmount = 200;
+        Account account = new Account("MyAccount", clientMock, INIT_BALANCE_ACCOUNT);
+        ArgumentCaptor<Operation> operationCaptor = ArgumentCaptor.forClass(Operation.class);
+        when(accountCrudRepositoryMock.findById(accountId)).thenReturn(Optional.of(account));
+
+        OperationCommand operationCommand = new OperationCommand(accountId, operationAmount, OperationTypeEnum.WITHDRAWAL);
+        assertThrows(InsufficientFundsException.class, () -> accountService.addOperation(operationCommand));
+
+        verify(operationPagingAndSortingRepository, never()).save(any(Operation.class));
     }
 }
