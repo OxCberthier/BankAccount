@@ -2,6 +2,7 @@ package com.cberthier.bankaccount.web.controller;
 
 import com.cberthier.bankaccount.domain.model.Account;
 import com.cberthier.bankaccount.domain.model.AccountNotFoundException;
+import com.cberthier.bankaccount.domain.model.InsufficientFundsException;
 import com.cberthier.bankaccount.domain.model.InvalidOperationException;
 import com.cberthier.bankaccount.service.AccountService;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
@@ -32,6 +33,8 @@ public class AccountController {
             account = accountService.addOperation(operationPayload.toCommand());
         } catch (InvalidOperationException e) {
             return Result.failure("Invalid Operation");
+        } catch (InsufficientFundsException e) {
+            return Result.failure("Insufficient Funds");
         }
 
         return AccountResponseEntity.build(account);

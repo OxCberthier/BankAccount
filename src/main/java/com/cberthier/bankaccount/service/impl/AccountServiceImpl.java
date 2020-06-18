@@ -1,10 +1,7 @@
 package com.cberthier.bankaccount.service.impl;
 
 import com.cberthier.bankaccount.domain.OperationCommand;
-import com.cberthier.bankaccount.domain.model.Account;
-import com.cberthier.bankaccount.domain.model.AccountNotFoundException;
-import com.cberthier.bankaccount.domain.model.InvalidOperationException;
-import com.cberthier.bankaccount.domain.model.Operation;
+import com.cberthier.bankaccount.domain.model.*;
 import com.cberthier.bankaccount.domain.repository.AccountCrudRepository;
 import com.cberthier.bankaccount.domain.repository.OperationPagingAndSortingRepository;
 import com.cberthier.bankaccount.service.AccountService;
@@ -34,17 +31,19 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account addOperation(OperationCommand operationCommand) throws AccountNotFoundException, InvalidOperationException {
+    public Account addOperation(OperationCommand operationCommand) throws AccountNotFoundException, InvalidOperationException, InsufficientFundsException {
         logger.debug("Add Operation -> AccountId {}, Amount: {}, Type: {}",
                 operationCommand.getAccountId(), operationCommand.getAmount(), operationCommand.getOperationType());
 
         if (Double.compare(operationCommand.getAmount(), 0) < 0) {
+            logger.debug("Operation rejected for negative amount");
             throw new InvalidOperationException();
         }
 
         Optional<Account> optionalAccount = accountCrudRepository.findById(operationCommand.getAccountId());
 
         if (optionalAccount.isEmpty()) {
+            logger.debug("Operation rejected for account not found");
             throw new AccountNotFoundException();
         }
 
@@ -54,9 +53,11 @@ public class AccountServiceImpl implements AccountService {
         BigDecimal newBalance;
         switch (operationCommand.getOperationType()) {
             case DEPOSIT:
+                logger.debug("Add {} to account", operationCommand.getAmount());
                 newBalance = BigDecimal.valueOf(account.getBalance()).add(BigDecimal.valueOf(operationCommand.getAmount()));
                 break;
             case WITHDRAWAL:
+                logger.debug("Subtract {} to account", operationCommand.getAmount());
                 newBalance = BigDecimal.valueOf(account.getBalance()).subtract(BigDecimal.valueOf(operationCommand.getAmount()));
                 break;
             default:
@@ -64,6 +65,11 @@ public class AccountServiceImpl implements AccountService {
                 throw new InvalidOperationException();
         }
 
+        //Account balance can't be negative
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            logger.debug("Operation rejected for insufficient funds");
+            throw new InsufficientFundsException();
+        }
         //Update balance account
         account.setBalance(newBalance.doubleValue());
 

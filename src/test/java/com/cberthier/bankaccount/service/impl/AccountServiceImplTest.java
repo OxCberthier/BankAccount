@@ -34,7 +34,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void addDepositOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException {
+    public void addDepositOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException, InsufficientFundsException {
         Long accountId = 1L;
         double operationAmount = 99.9;
         Account account = new Account("MyAccount", clientMock, INIT_BALANCE_ACCOUNT);
@@ -80,7 +80,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void addWithdrawalOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException {
+    public void addWithdrawalOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException, InsufficientFundsException {
         Long accountId = 1L;
         double operationAmount = 99.9;
         Account account = new Account("MyAccount", clientMock, INIT_BALANCE_ACCOUNT);
