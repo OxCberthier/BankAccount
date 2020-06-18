@@ -1,10 +1,7 @@
 package com.cberthier.bankaccount.web.controller;
 
 import com.cberthier.bankaccount.domain.OperationCommand;
-import com.cberthier.bankaccount.domain.model.Account;
-import com.cberthier.bankaccount.domain.model.AccountNotFoundException;
-import com.cberthier.bankaccount.domain.model.InvalidOperationException;
-import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
+import com.cberthier.bankaccount.domain.model.*;
 import com.cberthier.bankaccount.service.AccountService;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -106,6 +103,54 @@ class AccountControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
 
         when(accountService.addOperation(any(OperationCommand.class))).thenThrow(new InvalidOperationException());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/accounts/operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(StandardCharsets.UTF_8.name())
+                        .content(objectMapper.writeValueAsString(operationPayload))
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        verify(accountService).addOperation(any(OperationCommand.class));
+    }
+
+    @Test
+    public void addWithdrawalOperationToAccount() throws Exception {
+
+        OperationPayload operationPayload = new OperationPayload(1L, 100, OperationTypeEnum.WITHDRAWAL);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        when(accountService.addOperation(any(OperationCommand.class))).thenReturn(accountMock);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/accounts/operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(StandardCharsets.UTF_8.name())
+                        .content(objectMapper.writeValueAsString(operationPayload))
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accountId").value(ACCOUNT_ID))
+                //Balance is not updated because account service is mocking
+                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(INIT_ACCOUNT_BALANCE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(ACCOUNT_NAME));
+
+        ArgumentCaptor<OperationCommand> argumentCaptor = ArgumentCaptor.forClass(OperationCommand.class);
+        verify(accountService).addOperation(argumentCaptor.capture());
+        OperationCommand captorValue = argumentCaptor.getValue();
+        assertEquals(operationPayload.getAccountId(), captorValue.getAccountId());
+        assertEquals(operationPayload.getAmount(), captorValue.getAmount());
+        assertEquals(operationPayload.getOperationType(), captorValue.getOperationType());
+    }
+
+    @Test
+    public void addWithdrawalOperationToAccountInsufficientFunds() throws Exception {
+
+        OperationPayload operationPayload = new OperationPayload(1L, 1000, OperationTypeEnum.WITHDRAWAL);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        when(accountService.addOperation(any(OperationCommand.class))).thenThrow(new InsufficientFundsException());
 
         mockMvc.perform(
                 MockMvcRequestBuilders

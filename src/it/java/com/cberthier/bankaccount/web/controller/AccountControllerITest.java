@@ -43,7 +43,7 @@ class AccountControllerITest {
         client = new Client("Cyril", "BERTHIER");
         clientCrudRepository.save(client);
 
-        account = new Account("MyAccount", client, 0);
+        account = new Account("MyAccount", client, 100);
         accountCrudRepository.save(account);
     }
 
@@ -62,9 +62,8 @@ class AccountControllerITest {
                         .content(objectMapper.writeValueAsString(operationPayload))
         )
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.accountId").value(account.getId()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(Double.sum(account.getBalance(), operationAmount)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(200))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(account.getName()));
     }
 
@@ -88,6 +87,43 @@ class AccountControllerITest {
     public void addDepositOperationToAccountWithNegativeAmount() throws Exception {
 
         OperationPayload operationPayload = new OperationPayload(account.getId(), -10, OperationTypeEnum.DEPOSIT);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/accounts/operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(StandardCharsets.UTF_8.name())
+                        .content(objectMapper.writeValueAsString(operationPayload))
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+    }
+
+    @Test
+    public void addWithdrawalOperationToAccount() throws Exception {
+
+        double operationAmount = 10.0;
+        OperationPayload operationPayload = new OperationPayload(account.getId(), operationAmount, OperationTypeEnum.WITHDRAWAL);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/accounts/operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(StandardCharsets.UTF_8.name())
+                        .content(objectMapper.writeValueAsString(operationPayload))
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accountId").value(account.getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(90))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(account.getName()));
+    }
+
+
+    @Test
+    public void addWithdrawalOperationToAccountInsufficientFunds() throws Exception {
+
+        OperationPayload operationPayload = new OperationPayload(account.getId(), 10000, OperationTypeEnum.WITHDRAWAL);
         ObjectMapper objectMapper = new ObjectMapper();
 
         mockMvc.perform(
