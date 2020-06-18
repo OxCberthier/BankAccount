@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -50,7 +51,21 @@ public class AccountServiceImpl implements AccountService {
         Account account = optionalAccount.get();
         logger.debug("Old balance -> {}", account.getBalance());
 
-        account.setBalance(Double.sum(account.getBalance(), operationCommand.getAmount()));
+        BigDecimal newBalance;
+        switch (operationCommand.getOperationType()) {
+            case DEPOSIT:
+                newBalance = BigDecimal.valueOf(account.getBalance()).add(BigDecimal.valueOf(operationCommand.getAmount()));
+                break;
+            case WITHDRAWAL:
+                newBalance = BigDecimal.valueOf(account.getBalance()).subtract(BigDecimal.valueOf(operationCommand.getAmount()));
+                break;
+            default:
+                logger.error("Invalid Operation type");
+                throw new InvalidOperationException();
+        }
+
+        //Update balance account
+        account.setBalance(newBalance.doubleValue());
 
         logger.debug("New balance -> {}", account.getBalance());
 
