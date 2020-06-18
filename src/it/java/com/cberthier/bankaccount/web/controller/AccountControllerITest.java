@@ -50,7 +50,8 @@ class AccountControllerITest {
     @Test
     public void addDepositOperationToAccount() throws Exception {
 
-        OperationPayload operationPayload = new OperationPayload(account.getId(), 100, OperationTypeEnum.DEPOSIT);
+        double operationAmount = 100.0;
+        OperationPayload operationPayload = new OperationPayload(account.getId(), operationAmount, OperationTypeEnum.DEPOSIT);
         ObjectMapper objectMapper = new ObjectMapper();
 
         mockMvc.perform(
@@ -59,7 +60,12 @@ class AccountControllerITest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(objectMapper.writeValueAsString(operationPayload))
-        ).andExpect(MockMvcResultMatchers.status().isOk());
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accountId").value(account.getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(Double.sum(account.getBalance(), operationAmount)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(account.getName()));
     }
 
     @Test

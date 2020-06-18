@@ -8,6 +8,7 @@ import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
 import com.cberthier.bankaccount.service.AccountService;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -29,6 +30,10 @@ import static org.mockito.Mockito.when;
 @WebMvcTest(AccountController.class)
 class AccountControllerTest {
 
+    private static final Long ACCOUNT_ID = 1L;
+    private static final Double INIT_ACCOUNT_BALANCE = 0.0;
+    private static final String ACCOUNT_NAME = "MyAccount";
+
     @Autowired
     MockMvc mockMvc;
 
@@ -37,6 +42,14 @@ class AccountControllerTest {
 
     @Mock
     Account accountMock;
+
+    @BeforeEach
+    public void setup() {
+        //Configure accountMock
+        when(accountMock.getId()).thenReturn(ACCOUNT_ID);
+        when(accountMock.getBalance()).thenReturn(INIT_ACCOUNT_BALANCE);
+        when(accountMock.getName()).thenReturn(ACCOUNT_NAME);
+    }
 
     @Test
     public void addDepositOperationToAccount() throws Exception {
@@ -52,7 +65,12 @@ class AccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(objectMapper.writeValueAsString(operationPayload))
-        ).andExpect(MockMvcResultMatchers.status().isOk());
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accountId").value(ACCOUNT_ID))
+                //Balance is not updated because account service is mocking
+                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(INIT_ACCOUNT_BALANCE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(ACCOUNT_NAME));
 
         ArgumentCaptor<OperationCommand> argumentCaptor = ArgumentCaptor.forClass(OperationCommand.class);
         verify(accountService).addOperation(argumentCaptor.capture());
