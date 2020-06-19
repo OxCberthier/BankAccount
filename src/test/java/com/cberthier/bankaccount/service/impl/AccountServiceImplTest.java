@@ -9,11 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AccountServiceImplTest {
@@ -32,6 +34,10 @@ class AccountServiceImplTest {
         MockitoAnnotations.initMocks(this);
         accountService = new AccountServiceImpl(accountCrudRepositoryMock, operationPagingAndSortingRepository);
     }
+
+    /**
+     * Add Operation
+     **/
 
     @Test
     public void addDepositOperationOnAccountToUpdateBalanceAccount() throws AccountNotFoundException, InvalidOperationException, InsufficientFundsException {
@@ -111,5 +117,25 @@ class AccountServiceImplTest {
         assertThrows(InsufficientFundsException.class, () -> accountService.addOperation(operationCommand));
 
         verify(operationPagingAndSortingRepository, never()).save(any(Operation.class));
+    }
+
+    /**
+     * Get Operations
+     **/
+    @Test
+    public void retrieveAccountOperations() {
+        Long accountId = 1L;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("date")));
+
+        accountService.getOperations(accountId, pageable);
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(operationPagingAndSortingRepository).findAllByAccountId(eq(accountId), pageableCaptor.capture());
+        PageRequest pageableCaptorValue = (PageRequest) pageableCaptor.getValue();
+
+        assertEquals(0, pageableCaptorValue.getPageNumber());
+        assertEquals(10, pageableCaptorValue.getPageSize());
+        assertTrue(pageableCaptorValue.getSort().get().findFirst().get().isDescending());
+        assertEquals("date", pageableCaptorValue.getSort().get().findFirst().get().getProperty());
     }
 }

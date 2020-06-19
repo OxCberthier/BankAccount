@@ -7,6 +7,8 @@ import com.cberthier.bankaccount.domain.repository.OperationPagingAndSortingRepo
 import com.cberthier.bankaccount.service.AccountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -79,5 +81,10 @@ public class AccountServiceImpl implements AccountService {
                 LocalDateTime.now());
         operationPagingAndSortingRepository.save(operation);
         return operation.getAccount();
+    }
+
+    @Override
+    public Page<Operation> getOperations(Long accountId, Pageable pageable) {
+        return null;
     }
 }
