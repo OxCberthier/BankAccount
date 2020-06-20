@@ -85,6 +85,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Page<Operation> getOperations(Long accountId, Pageable pageable) {
-        return null;
+        return operationPagingAndSortingRepository.findAllByAccountId(accountId, pageable);
     }
 }
