@@ -35,3 +35,15 @@ Request to add 100 on account with id 10:
 Request to retrieve 10 on account with id 10:
  
 `curl --location --request POST "http://localhost:8080/accounts/operations" --header "Content-Type: application/json" --data-raw "{\"accountId\":10,\"amount\":10,\"operationType\":\"WITHDRAWAL\"}"`
+
+**US 3:**
+
+**IN ORDER TO** check my operations
+
+**AS A** bank client
+
+**I WANT TO** see the history (operation, date, amount, balance) of my operations
+
+Request to retrieve 4 last operation account:
+ 
+`curl --location --request GET "http://localhost:8080/accounts/operations?accountId=10&page=0&size=4&sort=date,desc"`
