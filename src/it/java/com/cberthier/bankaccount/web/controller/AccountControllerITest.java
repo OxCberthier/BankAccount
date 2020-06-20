@@ -3,9 +3,11 @@ package com.cberthier.bankaccount.web.controller;
 import com.cberthier.bankaccount.BankAccountApplication;
 import com.cberthier.bankaccount.domain.model.Account;
 import com.cberthier.bankaccount.domain.model.Client;
+import com.cberthier.bankaccount.domain.model.Operation;
 import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
 import com.cberthier.bankaccount.domain.repository.AccountCrudRepository;
 import com.cberthier.bankaccount.domain.repository.ClientCrudRepository;
+import com.cberthier.bankaccount.domain.repository.OperationPagingAndSortingRepository;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +21,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @SpringBootTest(classes = BankAccountApplication.class)
 @AutoConfigureMockMvc
@@ -34,6 +39,9 @@ class AccountControllerITest {
 
     @Autowired
     AccountCrudRepository accountCrudRepository;
+
+    @Autowired
+    OperationPagingAndSortingRepository operationPagingAndSortingRepository;
 
     private Client client;
     private Account account;
@@ -134,5 +142,35 @@ class AccountControllerITest {
                         .content(objectMapper.writeValueAsString(operationPayload))
         ).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
+    }
+
+    @Test
+    @Transactional
+    public void retrieveOperationAccount() throws Exception {
+        Operation operation1 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(2));
+        Operation operation2 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(1));
+        Operation operation3 = new Operation(account, 100.0, OperationTypeEnum.WITHDRAWAL, LocalDateTime.now().minusHours(5));
+        LocalDateTime now = LocalDateTime.now();
+        Operation operation4 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, now);
+
+        operationPagingAndSortingRepository.save(operation1);
+        operationPagingAndSortingRepository.save(operation2);
+        operationPagingAndSortingRepository.save(operation3);
+        operationPagingAndSortingRepository.save(operation4);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .get("/accounts/operations")
+                        .param("accountId", account.getId().toString())
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "date,desc")
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalPages").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(4))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.size").value(10))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.operations[0].date").value(now.format(DateTimeFormatter.ISO_DATE_TIME)));
     }
 }

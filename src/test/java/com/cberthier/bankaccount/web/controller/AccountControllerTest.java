@@ -12,15 +12,21 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -161,5 +167,30 @@ class AccountControllerTest {
         ).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         verify(accountService).addOperation(any(OperationCommand.class));
+    }
+
+    @Test
+    public void retrieveOperationAccount() throws Exception {
+        Operation operation1 = new Operation(accountMock, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now());
+        PageImpl page = new PageImpl(Collections.singletonList(operation1));
+        when(accountService.getOperations(anyLong(), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .get("/accounts/operations")
+                        .param("accountId", "1")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "date,desc")
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        ArgumentCaptor<Pageable> argumentCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(accountService).getOperations(anyLong(), argumentCaptor.capture());
+        Pageable pageableCaptorValue = argumentCaptor.getValue();
+        assertEquals(0, pageableCaptorValue.getPageNumber());
+        assertEquals(10, pageableCaptorValue.getPageSize());
+        assertTrue(pageableCaptorValue.getSort().get().findFirst().get().isDescending());
+        assertEquals("date", pageableCaptorValue.getSort().get().findFirst().get().getProperty());
     }
 }
