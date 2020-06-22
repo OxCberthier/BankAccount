@@ -17,6 +17,10 @@ spring:
     console:
       enabled: true
 
+app:
+  jwtSecret: MySecret
+  jwtExpirationMs: 86400000
+
 logging:
   level:
     com.cberthier.bankaccount: DEBUG

@@ -12,6 +12,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -137,5 +139,13 @@ class AccountServiceImplTest {
         assertEquals(10, pageableCaptorValue.getPageSize());
         assertTrue(pageableCaptorValue.getSort().get().findFirst().get().isDescending());
         assertEquals("date", pageableCaptorValue.getSort().get().findFirst().get().getProperty());
+    }
+
+    @Test
+    public void generatePassword() {
+        String password = "Password";
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encryptedPassword = passwordEncoder.encode(password);
+        System.out.println(encryptedPassword);
     }
 }

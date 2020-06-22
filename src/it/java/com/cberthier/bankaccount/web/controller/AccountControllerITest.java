@@ -1,21 +1,21 @@
 package com.cberthier.bankaccount.web.controller;
 
 import com.cberthier.bankaccount.BankAccountApplication;
-import com.cberthier.bankaccount.domain.model.Account;
-import com.cberthier.bankaccount.domain.model.Client;
-import com.cberthier.bankaccount.domain.model.Operation;
-import com.cberthier.bankaccount.domain.model.OperationTypeEnum;
+import com.cberthier.bankaccount.domain.model.*;
 import com.cberthier.bankaccount.domain.repository.AccountCrudRepository;
 import com.cberthier.bankaccount.domain.repository.ClientCrudRepository;
 import com.cberthier.bankaccount.domain.repository.OperationPagingAndSortingRepository;
+import com.cberthier.bankaccount.domain.repository.RoleCrudRepository;
 import com.cberthier.bankaccount.web.payload.OperationPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -25,6 +25,7 @@ import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 
 @SpringBootTest(classes = BankAccountApplication.class)
 @AutoConfigureMockMvc
@@ -43,19 +44,38 @@ class AccountControllerITest {
     @Autowired
     OperationPagingAndSortingRepository operationPagingAndSortingRepository;
 
-    private Client client;
-    private Account account;
+    @Autowired
+    RoleCrudRepository roleCrudRepository;
 
+    Client client;
+    Account account;
+
+    /**
+     * Create client with one account
+     */
     @BeforeEach
     public void setup() {
-        client = new Client("Cyril", "BERTHIER");
+        Role roleClient = roleCrudRepository.save(new Role(RoleEnum.ROLE_CLIENT));
+        client = new Client("cberthier@oxiane.com", "$2a$10$rZHn6UFjrQWHWFi6sBmrJeykmybnRzW3t7p5ZHDyxHUG3UKxZ2nNC", "Cyril", "BERTHIER");
+        client.setRoles(Set.of(roleClient));
         clientCrudRepository.save(client);
 
         account = new Account("MyAccount", client, 100);
         accountCrudRepository.save(account);
     }
 
+    /**
+     * Clean database for next test
+     */
+    @AfterEach
+    public void clean() {
+        operationPagingAndSortingRepository.deleteAll();
+        clientCrudRepository.deleteAll();
+        roleCrudRepository.deleteAll();
+    }
+
     @Test
+    @WithMockUser
     public void addDepositOperationToAccount() throws Exception {
 
         double operationAmount = 100.0;
@@ -76,6 +96,7 @@ class AccountControllerITest {
     }
 
     @Test
+    @WithMockUser
     public void addDepositOperationToAccountNotFound() throws Exception {
 
         OperationPayload operationPayload = new OperationPayload(999999L, 100, OperationTypeEnum.DEPOSIT);
@@ -87,11 +108,12 @@ class AccountControllerITest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(objectMapper.writeValueAsString(operationPayload))
-        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
     @Test
+    @WithMockUser
     public void addDepositOperationToAccountWithNegativeAmount() throws Exception {
 
         OperationPayload operationPayload = new OperationPayload(account.getId(), -10, OperationTypeEnum.DEPOSIT);
@@ -108,6 +130,7 @@ class AccountControllerITest {
     }
 
     @Test
+    @WithMockUser
     public void addWithdrawalOperationToAccount() throws Exception {
 
         double operationAmount = 10.0;
@@ -129,6 +152,7 @@ class AccountControllerITest {
 
 
     @Test
+    @WithMockUser
     public void addWithdrawalOperationToAccountInsufficientFunds() throws Exception {
 
         OperationPayload operationPayload = new OperationPayload(account.getId(), 10000, OperationTypeEnum.WITHDRAWAL);
@@ -146,6 +170,7 @@ class AccountControllerITest {
 
     @Test
     @Transactional
+    @WithMockUser
     public void retrieveOperationAccount() throws Exception {
         Operation operation1 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(2));
         Operation operation2 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(1));

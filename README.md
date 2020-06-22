@@ -5,13 +5,17 @@
 
 ## Running Spring Boot Application
 Application is initialize with:
-* 1 Client (Id=1)
-* 1 Account (Id=10)
+* 1 Client (Id=10)
+* 1 Account (Id=100)
 
-`mvn spring-boot:run` in the root project directory
+`mvn spring-boot:run -Dspring-boot.run.profiles=dev` in the root project directory
 
 
 ## Testing User Story
+
+Request to generate JWT:
+`curl --location --request POST "http://localhost:8080/auth/signin" --header "Content-Type: application/json" --data-raw "{\"email\": \"cberthier@oxiane.com\",\"password\": \"Password\"}"`
+
 **US 1:**
  
 **IN ORDER TO** save money
@@ -20,9 +24,9 @@ Application is initialize with:
 
 **I WANT TO** make a deposit in my account 
 
-Request to add 100 on account with id 10:
+Request to add 100 on account with id 100:
  
-`curl --location --request POST "http://localhost:8080/accounts/operations" --header "Content-Type: application/json" --data-raw "{\"accountId\":10,\"amount\":100,\"operationType\":\"DEPOSIT\"}"`
+`curl --location --request POST "http://localhost:8080/accounts/operations" --header "Content-Type: application/json" --header "Authorization: Bearer ${JWT}"  --data-raw "{\"accountId\":100,\"amount\":100,\"operationType\":\"DEPOSIT\"}"`
 
 **US 2:**
 
@@ -32,9 +36,9 @@ Request to add 100 on account with id 10:
 
 **I WANT TO** make a withdrawal from my account
 
-Request to retrieve 10 on account with id 10:
+Request to retrieve 10 on account with id 100:
  
-`curl --location --request POST "http://localhost:8080/accounts/operations" --header "Content-Type: application/json" --data-raw "{\"accountId\":10,\"amount\":10,\"operationType\":\"WITHDRAWAL\"}"`
+`curl --location --request POST "http://localhost:8080/accounts/operations" --header "Content-Type: application/json" --header "Authorization: Bearer ${JWT}" --data-raw "{\"accountId\":100,\"amount\":10,\"operationType\":\"WITHDRAWAL\"}"`
 
 **US 3:**
 
@@ -46,4 +50,4 @@ Request to retrieve 10 on account with id 10:
 
 Request to retrieve 4 last operation account:
  
-`curl --location --request GET "http://localhost:8080/accounts/operations?accountId=10&page=0&size=4&sort=date,desc"`
+`curl --location --request GET "http://localhost:8080/accounts/operations?accountId=100&page=0&size=4&sort=date,desc" --header "Authorization: Bearer ${JWT}"`

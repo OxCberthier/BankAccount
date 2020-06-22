@@ -46,6 +46,6 @@ public class AccountController {
 
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ApiResult> handleAccountNotFoundException() {
-        return Result.notFound();
+        return Result.failure("Account not found");
     }
 }
