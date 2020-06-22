@@ -18,7 +18,10 @@ public class OperationsResponseEntity {
                         .map(operation -> ApiResult.blank()
                                 .add("date", operation.getDate())
                                 .add("amount", operation.getAmount())
-                                .add("type", operation.getOperationType())).collect(Collectors.toList())
+                                .add("type", operation.getOperationType())
+                                .add("accountBalance", operation.getAccountBalance())
+                        )
+                        .collect(Collectors.toList())
                 );
 
         return Result.ok(apiResult);
