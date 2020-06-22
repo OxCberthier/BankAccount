@@ -58,7 +58,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests().antMatchers("/auth/**").permitAll()
+                .authorizeRequests().antMatchers("/auth/**", "/swagger-ui.html", "/webjars/springfox-swagger-ui/**").permitAll()
                 .antMatchers("/", "/favicon.ico", "/static/**").permitAll()
                 .anyRequest().authenticated();
 
