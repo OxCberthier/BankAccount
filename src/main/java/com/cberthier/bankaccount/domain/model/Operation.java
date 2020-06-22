@@ -23,15 +23,19 @@ public class Operation {
     @Column(nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime date;
 
+    @Column(nullable = false)
+    private double accountBalance;
+
     //Default Hibernate constructor
     public Operation() {
     }
 
-    public Operation(Account account, double amount, OperationTypeEnum operationType, LocalDateTime date) {
+    public Operation(Account account, double amount, OperationTypeEnum operationType, LocalDateTime date, double accountBalance) {
         this.account = account;
         this.amount = amount;
         this.operationType = operationType;
         this.date = date;
+        this.accountBalance = accountBalance;
     }
 
     public Long getId() {
@@ -52,5 +56,9 @@ public class Operation {
 
     public LocalDateTime getDate() {
         return date;
+    }
+
+    public double getAccountBalance() {
+        return accountBalance;
     }
 }

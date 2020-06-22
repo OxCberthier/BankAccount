@@ -172,11 +172,11 @@ class AccountControllerITest {
     @Transactional
     @WithMockUser
     public void retrieveOperationAccount() throws Exception {
-        Operation operation1 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(2));
-        Operation operation2 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(1));
-        Operation operation3 = new Operation(account, 100.0, OperationTypeEnum.WITHDRAWAL, LocalDateTime.now().minusHours(5));
+        Operation operation1 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(2), 200);
+        Operation operation2 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now().minusDays(1), 300);
+        Operation operation3 = new Operation(account, 100.0, OperationTypeEnum.WITHDRAWAL, LocalDateTime.now().minusHours(5), 200);
         LocalDateTime now = LocalDateTime.now();
-        Operation operation4 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, now);
+        Operation operation4 = new Operation(account, 100.0, OperationTypeEnum.DEPOSIT, now, 300);
 
         operationPagingAndSortingRepository.save(operation1);
         operationPagingAndSortingRepository.save(operation2);
@@ -196,6 +196,7 @@ class AccountControllerITest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalPages").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(4))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.size").value(10))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.operations[0].date").value(now.format(DateTimeFormatter.ISO_DATE_TIME)));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.operations[0].date").value(now.format(DateTimeFormatter.ISO_DATE_TIME)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.operations[0].accountBalance").value(300));
     }
 }

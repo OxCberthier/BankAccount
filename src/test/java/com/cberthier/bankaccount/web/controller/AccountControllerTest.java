@@ -193,7 +193,7 @@ class AccountControllerTest {
     @Test
     @WithMockUser
     public void retrieveOperationAccount() throws Exception {
-        Operation operation1 = new Operation(accountMock, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now());
+        Operation operation1 = new Operation(accountMock, 100.0, OperationTypeEnum.DEPOSIT, LocalDateTime.now(), 100);
         PageImpl page = new PageImpl(Collections.singletonList(operation1));
         when(accountService.getOperations(anyLong(), any(Pageable.class))).thenReturn(page);
 

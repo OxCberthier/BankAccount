@@ -78,7 +78,7 @@ public class AccountServiceImpl implements AccountService {
         logger.debug("New balance -> {}", account.getBalance());
 
         Operation operation = new Operation(account, operationCommand.getAmount(), operationCommand.getOperationType(),
-                LocalDateTime.now());
+                LocalDateTime.now(), newBalance.doubleValue());
         operationPagingAndSortingRepository.save(operation);
         return operation.getAccount();
     }
